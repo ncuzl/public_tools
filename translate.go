@@ -19,7 +19,9 @@ import (
 
 //不需要翻译的
 var recg = []string{"a", "an", "the", "to", "in", "by", "and", "that", "was", "were", "able", "of", "this", "hide",
-	"from", "i", "he", "me", "she", "her", "his", "animal", "room", "zoo", "help"}
+	"from", "i", "he", "me", "she", "her", "his", "animal", "room", "zoo", "help", "is", "on", "as", "who", "are",
+	"your", "you", "about", "with", "after", "him", "at", "new", "come", "came", "been", "news", "wife", "said", "we",
+	"but"}
 
 func httpGet(url string) string {
 	fmt.Println(url)
@@ -43,34 +45,34 @@ func Handler(line string) string {
 	words := strings.Fields(line)
 	var output string
 	for _, v := range words {
-		v = strings.Trim(v, "“”’.,\"") //删除单词里的一些杂乱字符
+		v = strings.Trim(v, " “”’.,\"") //删除单词里的一些杂乱字符
 		find := false
 		for _, u := range recg {
-			if strings.ToLower(v) == u {
+			if strings.ToLower(v) == strings.ToLower(u) {
 				find = true
 				break
 			}
 		}
-		if find {
-			continue
-		}
 
-		doc, err := goquery.NewDocument(fmt.Sprintf("http://www.dict.cn/%s", v))
-		if err != nil {
-			fmt.Println(err.Error())
-		}
 		output_line := v
-
-		symbol := doc.Find(".phonetic span bdo").Text()
-		output_line = fmt.Sprintf("%-15s %s", output_line, symbol) //15个字符左对齐
-		doc.Find(".main .dict-basic-ul li").Each(func(i int, s *goquery.Selection) {
-			_, b := s.Attr("style")
-			if !b {
-				span := s.Find("span")
-				strong := s.Find("strong")
-				output_line = fmt.Sprintf("%s %s %s", output_line, span.Text(), strong.Text())
+		if !find {
+			doc, err := goquery.NewDocument(fmt.Sprintf("http://www.dict.cn/%s", v))
+			if err != nil {
+				fmt.Println(err.Error())
+			} else {
+				symbol := doc.Find(".phonetic span bdo").Text()
+				output_line = fmt.Sprintf("%-15s %s", output_line, symbol) //15个字符左对齐
+				doc.Find(".main .dict-basic-ul li").Each(func(i int, s *goquery.Selection) {
+					_, b := s.Attr("style")
+					if !b {
+						span := s.Find("span")
+						strong := s.Find("strong")
+						output_line = fmt.Sprintf("%s %s %s", output_line, span.Text(), strong.Text())
+					}
+				})
 			}
-		})
+		}
+
 		if output == "" {
 			output = fmt.Sprintf("%s", output_line)
 		} else {
